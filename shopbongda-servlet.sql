@@ -87,3 +87,10 @@ begin
     end if;
 end //
 delimiter ;
+
+DELIMITER //
+CREATE PROCEDURE sp_delete_product(IN product_id VARCHAR(255))
+BEGIN
+    DELETE FROM products WHERE id = product_id;
+END //
+DELIMITER ;

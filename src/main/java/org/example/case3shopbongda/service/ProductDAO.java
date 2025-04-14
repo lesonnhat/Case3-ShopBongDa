@@ -1,7 +1,7 @@
+// ProductDAO.java (trong thư mục service)
 package org.example.case3shopbongda.service;
 
 import org.example.case3shopbongda.model.Product;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class ProductDAO implements IDAO<Product> {
     private static final String SELECT_ALL_PRODUCTS = "select * from product";
     private static final String INSERT_PRODUCT_SQL = "INSERT INTO product (Id, Name, Price, Origin, ImageUrl, Category) VALUES (?, ?, ?, ?, ?, ?);";
     private static final String SELECT_PRODUCT_BY_ID = "select * from product where id = ?";
-    private static final String UPDATE_PRODUCT_SQL = "update product set name = ?, price = ?, orgin = ?, imageUrl = ?, category = ? where id = ?;";
+    private static final String UPDATE_PRODUCT_SQL = "update product set name = ?, price = ?, origin = ?, imageUrl = ?, category = ? where id = ?;";
 
     public ProductDAO() {
     }
@@ -64,11 +64,12 @@ public class ProductDAO implements IDAO<Product> {
     public void save(Product product) throws SQLException {
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(INSERT_PRODUCT_SQL)) {
-            preparedStatement.setString(1, product.getName());
-            preparedStatement.setDouble(2, product.getPrice());
-            preparedStatement.setString(3, product.getOrigin());
-            preparedStatement.setString(4, product.getImageUrl());
-            preparedStatement.setString(5, product.getCategory());
+            preparedStatement.setString(1, product.getId());
+            preparedStatement.setString(2, product.getName());
+            preparedStatement.setDouble(3, product.getPrice());
+            preparedStatement.setString(4, product.getOrigin());
+            preparedStatement.setString(5, product.getImageUrl());
+            preparedStatement.setString(6, product.getCategory());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             printSQLException(e);
@@ -77,14 +78,15 @@ public class ProductDAO implements IDAO<Product> {
 
     @Override
     public void saveWithStoreProcedure(Product product) throws SQLException {
-        String query = "{CALL sp_insert_product(?,?)}";
+        String query = "{CALL sp_insert_product(?,?,?,?,?,?)}";
         try (Connection connection = DBConnection.getConnection();
              CallableStatement callableStatement = connection.prepareCall(query);) {
-            callableStatement.setString(1, product.getName());
-            callableStatement.setDouble(2, product.getPrice());
-            callableStatement.setString(3, product.getOrigin());
-            callableStatement.setString(4, product.getImageUrl());
-            callableStatement.setString(5, product.getCategory());
+            callableStatement.setString(1, product.getId());
+            callableStatement.setString(2, product.getName());
+            callableStatement.setDouble(3, product.getPrice());
+            callableStatement.setString(4, product.getOrigin());
+            callableStatement.setString(5, product.getImageUrl());
+            callableStatement.setString(6, product.getCategory());
             callableStatement.executeUpdate();
         } catch (SQLException e) {
             printSQLException(e);
@@ -93,7 +95,7 @@ public class ProductDAO implements IDAO<Product> {
 
     @Override
     public Product findById(String id) {
-        String query = "SELECT * FROM products WHERE id = ?";
+        String query = "SELECT * FROM product WHERE id = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, id);
@@ -103,7 +105,8 @@ public class ProductDAO implements IDAO<Product> {
                 product.setId(rs.getString("id"));
                 product.setName(rs.getString("name"));
                 product.setPrice(rs.getDouble("price"));
-                product.setImageUrl(rs.getString("image_url"));
+                product.setOrigin(rs.getString("origin"));
+                product.setImageUrl(rs.getString("imageUrl"));
                 product.setCategory(rs.getString("category"));
                 System.out.println("Found product: " + product.getName() + ", ID: " + id);
                 return product;
@@ -126,7 +129,7 @@ public class ProductDAO implements IDAO<Product> {
             ResultSet rs = callableStatement.executeQuery();
             while (rs.next()) {
                 String name = rs.getString("name");
-                double price = Double.parseDouble(rs.getString("price"));
+                double price = rs.getDouble("price");
                 String origin = rs.getString("origin");
                 String imageUrl = rs.getString("imageUrl");
                 String category = rs.getString("category");
@@ -158,8 +161,8 @@ public class ProductDAO implements IDAO<Product> {
 
     @Override
     public boolean updateWithStoreProcedure(Product product) throws SQLException {
-        String query = "{CALL sp_update_product(?,?,?,?,?)}";
-        boolean rowUpdated;
+        String query = "{CALL sp_update_product(?,?,?,?,?,?)}";
+        boolean rowUpdated = false;
         try (Connection connection = DBConnection.getConnection();
              CallableStatement statement = connection.prepareCall(query);) {
             statement.setString(1, product.getId());
@@ -169,8 +172,21 @@ public class ProductDAO implements IDAO<Product> {
             statement.setString(5, product.getImageUrl());
             statement.setString(6, product.getCategory());
             rowUpdated = statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            printSQLException(e);
         }
         return rowUpdated;
+    }
+
+    public void deleteWithStoreProcedure(String id) throws SQLException {
+        String query = "{CALL sp_delete_product(?)}";
+        try (Connection connection = DBConnection.getConnection();
+             CallableStatement statement = connection.prepareCall(query)) {
+            statement.setString(1, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
     }
 
     private void printSQLException(SQLException ex) {

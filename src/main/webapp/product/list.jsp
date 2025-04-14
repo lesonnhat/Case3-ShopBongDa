@@ -210,7 +210,7 @@
                                                     <p class="card-text fw-bold" style="font-size: 20px"><c:out value="${p.getPrice()}"/>
                                                         <span class="currency" style="font-weight: normal">$</span>
                                                     </p>
-                                                    <button class="btn add-to-cart" onclick="window.location.href='/carts?action=add&id=${p.getId()}'">
+                                                    <button class="btn add-to-cart" onclick="window.location.href='${pageContext.request.contextPath}/carts?action=add&id=${p.getId()}'">
                                                         <i class="fa-solid fa-cart-shopping me-2"></i>Thêm Vào Giỏ
                                                     </button>
                                                 </div>

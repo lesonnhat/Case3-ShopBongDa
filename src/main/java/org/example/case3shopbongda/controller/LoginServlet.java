@@ -1,3 +1,4 @@
+// LoginServlet.java (trong thư mục controller)
 package org.example.case3shopbongda.controller;
 
 import java.io.IOException;
@@ -53,9 +54,16 @@ public class LoginServlet extends HttpServlet {
                     session.setAttribute("username", username);
                     session.setAttribute("role", role); // Lưu role vào session
                     System.out.println("Session username set: " + session.getAttribute("username")); // Log để debug
-                    System.out.println("Context path: " + request.getContextPath()); // Log để debug
-                    System.out.println("Redirecting to: " + request.getContextPath() + "products"); // Log để debug
-                    response.sendRedirect(request.getContextPath() + "products");
+                    System.out.println("Session role set: " + session.getAttribute("role")); // Log để debug
+
+                    // Chuyển hướng theo role
+                    if ("admin".equals(role)) {
+                        System.out.println("Redirecting to: " + request.getContextPath() + "/admin"); // Log để debug
+                        response.sendRedirect(request.getContextPath() + "/admin");
+                    } else {
+                        System.out.println("Redirecting to: " + request.getContextPath() + "/products"); // Log để debug
+                        response.sendRedirect(request.getContextPath() + "/products");
+                    }
                     return; // Đảm bảo không có code nào chạy sau redirect
                 } else {
                     // Sai mật khẩu
